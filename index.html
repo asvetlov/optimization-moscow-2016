@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ru" >
+  <head>
+    <title>Why do you need async web server</title>
+    <meta name="description" content="">
+    <meta name="author" content="Andrew Svetlov">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/custom.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/custom.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+     var link = document.createElement( 'link' );
+     link.rel = 'stylesheet';
+     link.type = 'text/css';
+     link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+     document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>Optimization with Cython</h1>
+          <h2>Why? When? How?</h2>
+          <p>
+            Andrew Svetlov
+            <p>
+              <small>http://asvetlov.blogspot.com</small><br>
+              <small>andrew.svetlov@gmail.com</small><br>
+              <small>http://asvetlov.github.io/optimization-moscow-2016/</small>
+            </p>
+          </p>
+        </section>
+        <section>
+          <h2>Bio</h2>
+          <p>
+            <ul>
+              <li>Use Python for more than 16 years</li>
+              <li>Python Core Developer since 2012</li>
+              <li><i>asyncio</i> committer</li>
+              <li><i>aiohttp</i> maintainer</li>
+              <li>Author of a dozen libraries under <i>aio-libs</i> umbrella</li>
+            </ul
+          </p>
+        </section>
+        <section>
+          <section>
+            <h1>Why?</h1>
+            <ul>
+              <li class="fragment">It's cool!!!</li>
+              <li class="fragment">Learning new tech</li>
+              <li class="fragment">Take out a time on non-business task</li>
+              <li class="fragment">...</li>
+            </ul>
+          </section>
+          <section>
+            <h1>To speedup your code</h1>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2>Optimization techniques</h2>
+            <ul>
+              <li class="fragment">Improve algorithms</li>
+              <li class="fragment">Use python tweaks</li>
+              <li class="fragment">Rewrite with C</li>
+              <li class="fragment">Use Cython</li>
+            </ul>
+          </section>
+          <section>
+            <h2>Prerequisites</h2>
+            <ul>
+              <li class="fragment">Python implementation exists</li>
+              <li class="fragment">100% test coverage</li>
+              <li class="fragment">Bottleneck is found by profiler</li>
+            </ul>
+          </section>
+          <section>
+            <h1>Cythonize all</h1>
+            <h2 class="fragment">10% speedup</h2>
+            <h2 class="fragment">Fails by many reasons: Cython != Python</h2>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h1>Distribution</h1>
+          </section>
+          <section>
+            <h2>setup.py</h2>
+            <pre><code>
+from setuptools import setup
+from Cython.Build import cythonize
+
+setup(
+    ext_modules = cythonize("helloworld.pyx")
+)
+            </code></pre>
+          </section>
+          <section>
+            <h2>pyximport</h2>
+            <pre><code>
+import pyximport
+pyximport.install()
+
+import helloworld
+            </code></pre>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h3>Example: websocket mask applying</h3>
+            <pre><code>
+native_byteorder = sys.byteorder
+
+def _websocket_mask_python(mask, data):
+    assert isinstance(data, bytearray), data
+    assert len(mask) == 4, mask
+    datalen = len(data)
+    if datalen == 0:
+        return bytearray()
+    data = int.from_bytes(data, native_byteorder)
+    mask = int.from_bytes(mask * (datalen // 4) + mask[: datalen % 4],
+                          native_byteorder)
+    return (data ^ mask).to_bytes(datalen, native_byteorder)
+
+            </code></pre>
+          </section>
+          <section>
+            <h2>Naive cythonizing: 9% boost</h2>
+            <pre><code class="shell">
+$ cython -a module.pyx
+$ xdg-open module.html
+            </code></pre>
+          </section>
+        </section>
+        <section>
+          <h1>Questions?</h1>
+          <p>
+            Andrew Svetlov
+            <p>
+              <small>http://asvetlov.blogspot.com</small><br>
+              <small>andrew.svetlov@gmail.com</small><br>
+              <small>http://asvetlov.github.io/aiohttp-krasnoyarsk-2016/</small>
+            </p>
+          </p>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+     // Full list of configuration options available at:
+     // https://github.com/hakimel/reveal.js#configuration
+     Reveal.initialize({
+       controls: true,
+       progress: true,
+       history: true,
+       center: true,
+       slideNumber: true,
+       transition: 'slide', // none/fade/slide/convex/concave/zoom
+       // Optional reveal.js plugins
+       dependencies: [
+         { src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+         { src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+         { src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+         { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+         { src: 'plugin/zoom-js/zoom.js', async: true },
+         { src: 'plugin/notes/notes.js', async: true }
+       ]
+     });
+    </script>
+
+  </body>
+</html>
