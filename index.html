@@ -72,7 +72,7 @@
         </section>
         <section>
           <section>
-            <h2>Optimization techniques</h2>
+            <h1>Optimization techniques</h1>
             <ul>
               <li class="fragment">Improve algorithms</li>
               <li class="fragment">Use python tweaks</li>
@@ -120,6 +120,9 @@ import helloworld
           </section>
         </section>
         <section>
+          <section>
+            <h1>Step by step</h1>
+          </section>
           <section>
             <h3>Example: websocket mask applying</h3>
             <pre><code>
@@ -202,6 +205,53 @@ def _websocket_mask_cython(bytes mask, bytearray data):
             data_len -= 8
             </code></pre>
           </section>
+          <section>
+            <h2>Aware cythonizing: 20x boost</h2>
+            <pre><code class="shell">
+$ cython -a module.pyx
+$ xdg-open module.html
+            </code></pre>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h1>Usage and testing</h1>
+          </section>
+          <section>
+            <h2>Import</h2>
+            <pre><code>
+def _websocket_mask_python(mask, data):
+    ...
+
+if bool(os.environ.get('AIOHTTP_NO_EXTENSIONS')):
+    websocket_mask = _websocket_mask_python
+else:
+    try:
+        from ._websocket import _websocket_mask_cython
+        websocket_mask = _websocket_mask_cython
+    except ImportError:  # pragma: no cover
+        websocket_mask = _websocket_mask_python
+            </code></pre>
+          </section>
+          <section>
+            <h2>Testing</h2>
+            <pre><code>
+class WSTestMixin:
+    mask = None
+
+    def test_a(self):
+        self.assertEqual(self.mask(..., ...), ...)
+
+class TestCython(WSTestMixin, unittest.TestCase):
+    mask = _websocket_mask_cython
+
+class TestCython(WSTestMixin, unittest.TestCase):
+    mask = _websocket_mask_python
+            </code></pre>
+          </section>
+        </section>
+        <section>
+          <h1>Cython profiling and coverage</h1>
         </section>
         <section>
           <h1>Questions?</h1>
@@ -210,7 +260,7 @@ def _websocket_mask_cython(bytes mask, bytearray data):
             <p>
               <small>http://asvetlov.blogspot.com</small><br>
               <small>andrew.svetlov@gmail.com</small><br>
-              <small>http://asvetlov.github.io/aiohttp-krasnoyarsk-2016/</small>
+              <small>http://asvetlov.github.io/optimization-moscow-2016/</small>
             </p>
           </p>
         </section>
